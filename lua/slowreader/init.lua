@@ -7,6 +7,7 @@ M.config = {
   delay = 200, -- milliseconds per character
   stop_key = "<Esc>", -- Key to stop the animation
   initial_delay = 0, -- Initial delay before animation starts
+  final_delay = 0, -- Final delay after animation ends
 }
 
 function M.setup(opts)
@@ -115,7 +116,13 @@ local function animate_characters(chars, filetype)
 
   local function feed_next()
     if state.stop_flag or #chars == 0 then
-      restore_ui_state(buf)
+      if #chars == 0 then
+        vim.defer_fn(function()
+          restore_ui_state(buf)
+        end, M.config.final_delay or 0) -- Add final delay after animation
+      else
+        restore_ui_state(buf)
+      end
       return
     end
 
