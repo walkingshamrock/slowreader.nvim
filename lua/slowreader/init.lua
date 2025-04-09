@@ -1,13 +1,14 @@
 local M = {}
 
-M.version = "0.1.0"
+M.version = "0.2.0"
 
 M.config = {
   auto_disable_plugins = false,
-  delay = 200, -- milliseconds per character
-  stop_key = "<Esc>", -- Key to stop the animation
-  initial_delay = 0, -- Initial delay before animation starts
-  final_delay = 0, -- Final delay after animation ends
+  delay = 200,             -- milliseconds per character
+  stop_key = "<Esc>",      -- Key to stop the animation
+  initial_delay = 0,       -- Initial delay before animation starts
+  final_delay = 0,         -- Final delay after animation ends
+  scroll_margin = 5,       -- Number of lines to keep below the cursor
 }
 
 function M.setup(opts)
@@ -45,9 +46,7 @@ local function restore_snacks_words()
 end
 
 local function restore_ui_state(buf)
-  if not vim.api.nvim_buf_is_valid(buf) then
-    return
-  end
+  if not vim.api.nvim_buf_is_valid(buf) then return end
 
   restore_snacks_words()
 
@@ -61,7 +60,6 @@ local function restore_ui_state(buf)
     vim.api.nvim_echo({ { "SlowRead complete", "Question" } }, false, {})
   end
 
-  -- Close the buffer
   vim.api.nvim_buf_delete(buf, { force = true })
 end
 
@@ -104,6 +102,14 @@ local function collect_characters(filename)
   return chars
 end
 
+local function keep_cursor_with_margin()
+  local margin = M.config.scroll_margin or 0
+  local win_height = vim.api.nvim_win_get_height(0)
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local target_top_line = math.max(0, cursor[1] - (win_height - margin))
+  vim.fn.winrestview({ topline = target_top_line + 1 })
+end
+
 local function animate_characters(chars, filetype)
   vim.cmd("enew")
   local buf = vim.api.nvim_get_current_buf()
@@ -115,11 +121,9 @@ local function animate_characters(chars, filetype)
   vim.wo.relativenumber = false
   vim.wo.cursorline = false
   vim.wo.cursorcolumn = false
-  vim.bo[buf].modifiable = true -- Ensure the buffer is modifiable initially
-
+  vim.bo[buf].modifiable = true
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "" })
-
-  vim.bo[buf].modifiable = false -- Set the buffer to non-modifiable after initial setup
+  vim.bo[buf].modifiable = false
 
   local row, col = 0, 0
 
@@ -128,7 +132,7 @@ local function animate_characters(chars, filetype)
       if #chars == 0 then
         vim.defer_fn(function()
           restore_ui_state(buf)
-        end, M.config.final_delay or 0) -- Add final delay after animation
+        end, M.config.final_delay or 0)
       else
         restore_ui_state(buf)
       end
@@ -140,19 +144,22 @@ local function animate_characters(chars, filetype)
     if ch == "\n" then
       row = row + 1
       col = 0
-      vim.bo[buf].modifiable = true -- Temporarily make the buffer modifiable
+      vim.bo[buf].modifiable = true
       vim.api.nvim_buf_set_lines(buf, row, row, false, { "" })
-      vim.bo[buf].modifiable = false -- Restore non-modifiable state
+      vim.bo[buf].modifiable = false
+      vim.api.nvim_win_set_cursor(0, { row + 1, col })
+      keep_cursor_with_margin()
       vim.cmd("redraw")
       vim.defer_fn(feed_next, M.config.delay)
       return
     end
 
-    vim.bo[buf].modifiable = true -- Temporarily make the buffer modifiable
+    vim.bo[buf].modifiable = true
     vim.api.nvim_buf_set_text(buf, row, col, row, col, { " " })
-    vim.bo[buf].modifiable = false -- Restore non-modifiable state
+    vim.bo[buf].modifiable = false
     col = col + 1
     vim.api.nvim_win_set_cursor(0, { row + 1, col })
+    keep_cursor_with_margin()
     vim.cmd("redraw")
 
     vim.defer_fn(function()
@@ -160,16 +167,17 @@ local function animate_characters(chars, filetype)
         restore_ui_state(buf)
         return
       end
-      vim.bo[buf].modifiable = true -- Temporarily make the buffer modifiable
+      vim.bo[buf].modifiable = true
       vim.api.nvim_buf_set_text(buf, row, col - 1, row, col, { ch })
-      vim.bo[buf].modifiable = false -- Restore non-modifiable state
+      vim.bo[buf].modifiable = false
       vim.api.nvim_win_set_cursor(0, { row + 1, col })
+      keep_cursor_with_margin()
       vim.cmd("redraw")
       feed_next()
     end, M.config.delay)
   end
 
-  vim.defer_fn(feed_next, M.config.initial_delay or 0) -- Add initial delay before starting animation
+  vim.defer_fn(feed_next, M.config.initial_delay or 0)
 end
 
 local function determine_filetype(filename)
@@ -186,9 +194,7 @@ local function slow_read(filename)
   disable_snacks_words()
 
   local chars = collect_characters(filename)
-  if not chars then
-    return
-  end
+  if not chars then return end
 
   local ft = determine_filetype(filename)
   animate_characters(chars, ft)
