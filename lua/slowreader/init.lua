@@ -50,10 +50,19 @@ local function restore_ui_state(buf)
   end
 
   restore_snacks_words()
+
   for setting, value in pairs(state.previous_ui_settings) do
     vim.wo[setting] = value
   end
+
   vim.bo[buf].modifiable = true
+
+  if not state.stop_flag then
+    vim.api.nvim_echo({ { "SlowRead complete", "Question" } }, false, {})
+  end
+
+  -- Close the buffer
+  vim.api.nvim_buf_delete(buf, { force = true })
 end
 
 local function save_ui_state()
