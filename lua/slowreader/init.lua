@@ -1,6 +1,6 @@
 local M = {}
 
-M.version = "0.2.0"
+M.version = "0.3.1"
 
 M.config = {
   auto_disable_plugins = false,
@@ -8,7 +8,8 @@ M.config = {
   stop_key = "<Esc>",      -- Key to stop the animation
   initial_delay = 0,       -- Initial delay before animation starts
   final_delay = 0,         -- Final delay after animation ends
-  scroll_margin = 5,       -- Number of lines to keep below the cursor
+  scroll_margin = 5,       -- Lines to keep below cursor
+  top_margin = 0,          -- Lines to keep above the first line of content
 }
 
 function M.setup(opts)
@@ -122,10 +123,24 @@ local function animate_characters(chars, filetype)
   vim.wo.cursorline = false
   vim.wo.cursorcolumn = false
   vim.bo[buf].modifiable = true
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "" })
+
+  -- Insert top margin padding lines
+  local padding_lines = {}
+  for _ = 1, M.config.top_margin or 0 do
+    table.insert(padding_lines, "")
+  end
+  table.insert(padding_lines, "") -- Add first actual content line
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, padding_lines)
+
   vim.bo[buf].modifiable = false
 
-  local row, col = 0, 0
+  local row = (M.config.top_margin or 0)
+  local col = 0
+
+  -- 🆕 Move cursor BEFORE animation starts (pre-delay)
+  vim.api.nvim_win_set_cursor(0, { row + 1, col })
+  keep_cursor_with_margin()
+  vim.cmd("redraw")
 
   local function feed_next()
     if state.stop_flag or #chars == 0 then
