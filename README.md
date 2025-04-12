@@ -2,6 +2,9 @@
 
 A Neovim plugin that reveals text like a typewriter, one character at a time — perfect for immersive reading sessions or demos.
 
+Thank you for considering supporting this project! Your generosity helps keep development active and ensures the plugin continues to improve.
+[![Buy Me A Coffee](https://img.shields.io/badge/-Buy%20me%20a%20coffee-yellow?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://www.buymeacoffee.com/walkingshamrock)
+
 ## Features
 
 - Typing animation per character
