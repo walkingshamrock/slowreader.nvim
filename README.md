@@ -15,7 +15,7 @@ A Neovim plugin that reveals text like a typewriter, one character at a time —
 ```lua
 {
   "walkingshamrock/slowreader.nvim",
-  cmd = "SlowRead",
+  cmd = { "SlowRead", "SlowInsert" },
   config = function()
     require("slowreader").setup({
       delay = 150, -- Customize typing speed
@@ -35,3 +35,9 @@ Or with no argument to animate the current buffer:
 ```vim
 :SlowRead
 ```
+
+## Additional Commands
+
+### `:SlowInsert`
+
+This command animates text insertion in the current buffer, revealing it one character at a time. Ideal for creating dramatic text effects or for presentations.
