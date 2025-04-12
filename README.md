@@ -45,3 +45,31 @@ Or with no argument to animate the current buffer:
 ### `:SlowInsert`
 
 This command animates text insertion in the current buffer, revealing it one character at a time. Ideal for creating dramatic text effects or for presentations.
+
+## Configuration Options
+
+You can customize the behavior of `slowreader.nvim` by passing the following options to the `setup` function:
+
+- `delay` (number): Controls the typing speed in milliseconds. Default is `200`.
+- `stop_key` (string): Keybinding to stop the animation. Default is `<Esc>`.
+- `initial_delay` (number): Delay in milliseconds before the animation starts. Default is `0`.
+- `final_delay` (number): Delay in milliseconds after the animation ends. Default is `0`.
+- `scroll_margin` (number): Number of lines to keep the cursor within the visible area. Default is `5`.
+- `top_margin` (number): Number of empty lines to add at the top of the buffer. Default is `0`.
+
+Example configuration:
+
+```lua
+require("slowreader").setup({
+  delay = 150, -- Customize typing speed
+  stop_key = "<C-c>", -- Change stop key to Ctrl+C
+  initial_delay = 100, -- Add a delay before animation starts
+  final_delay = 500, -- Add a delay after animation ends
+  scroll_margin = 3, -- Adjust scroll margin
+  top_margin = 2, -- Add top margin
+})
+```
+
+## Contributing
+
+Contributions are welcome! If you have ideas, bug reports, or improvements, feel free to open an issue or submit a pull request. Let's make `slowreader.nvim` even better together!
